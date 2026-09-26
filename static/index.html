@@ -3,203 +3,254 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LexiClear - AI Legal Intelligence</title>
+  <title>LexiClear - AI Legal Document Assistant</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* High contrast focus ring for Accessibility */
+    :focus-visible { outline: 3px solid #4338ca; outline-offset: 2px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+  </style>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen">
-  <header class="bg-indigo-900 text-white py-4 px-6 shadow-md">
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans">
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:p-4 focus:bg-indigo-600 focus:text-white focus:z-50">Skip to main content</a>
+
+  <header role="banner" class="bg-indigo-950 text-white py-4 px-6 shadow-sm">
     <div class="max-w-6xl mx-auto flex items-center justify-between">
-      <div class="flex items-center space-x-2">
-        <span class="text-2xl font-bold tracking-tight">LexiClear</span>
-        <span class="text-xs bg-indigo-700 uppercase tracking-widest px-2 py-0.5 rounded font-mono">AI Legal Assistant</span>
+      <div class="flex items-center space-x-3">
+        <h1 class="text-2xl font-bold tracking-tight">LexiClear</h1>
+        <span class="text-xs bg-indigo-800 text-indigo-100 uppercase tracking-wider px-2.5 py-1 rounded font-semibold" aria-label="Tool category">Legal Navigator</span>
       </div>
-      <p class="text-xs text-indigo-200 hidden sm:block">Democratizing Legal Clarity</p>
+      <p class="text-xs text-indigo-200">Plain-language contract comprehension</p>
     </div>
   </header>
 
-  <div class="bg-amber-100 border-b border-amber-300 text-amber-900 text-xs px-6 py-2 text-center">
-    <strong>Notice:</strong> LexiClear provides informational summaries and analysis. It is not licensed legal advice and does not replace an attorney.
-  </div>
+  <aside aria-label="Legal Disclaimer" class="bg-amber-100 border-b border-amber-300 text-amber-950 text-xs px-6 py-2.5 text-center font-medium">
+    <strong>Notice:</strong> LexiClear provides informational summaries and risk indicators. It is not formal legal advice and does not replace an attorney.
+  </aside>
 
-  <main class="max-w-6xl mx-auto p-6 space-y-6">
-    <!-- Tabs -->
-    <div class="flex space-x-2 border-b border-slate-200">
-      <button onclick="switchTab('analyze')" id="tab-analyze" class="py-2 px-4 border-b-2 font-medium text-sm border-indigo-600 text-indigo-600">Analyze Document</button>
-      <button onclick="switchTab('compare')" id="tab-compare" class="py-2 px-4 border-b-2 font-medium text-sm border-transparent text-slate-500 hover:text-slate-700">Compare Clauses</button>
-      <button onclick="switchTab('ask')" id="tab-ask" class="py-2 px-4 border-b-2 font-medium text-sm border-transparent text-slate-500 hover:text-slate-700">Q&A Chat</button>
+  <main id="main-content" role="main" class="max-w-6xl w-full mx-auto p-4 sm:p-6 space-y-6 flex-1">
+    <!-- Tab Controls with ARIA -->
+    <div role="tablist" aria-label="Navigation Features" class="flex space-x-2 border-b border-slate-200">
+      <button role="tab" id="tab-analyze" aria-selected="true" aria-controls="panel-analyze" tabindex="0" onclick="switchTab('analyze')" class="tab-btn py-2.5 px-4 font-semibold text-sm border-b-2 border-indigo-600 text-indigo-700">Analyze Document</button>
+      <button role="tab" id="tab-compare" aria-selected="false" aria-controls="panel-compare" tabindex="-1" onclick="switchTab('compare')" class="tab-btn py-2.5 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-600 hover:text-slate-900">Compare Clauses</button>
+      <button role="tab" id="tab-ask" aria-selected="false" aria-controls="panel-ask" tabindex="-1" onclick="switchTab('ask')" class="tab-btn py-2.5 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-600 hover:text-slate-900">Ask Document</button>
     </div>
 
-    <!-- Section 1: Analyze -->
-    <section id="panel-analyze" class="space-y-4">
+    <!-- Panel 1: Analyze -->
+    <section role="tabpanel" id="panel-analyze" aria-labelledby="tab-analyze" class="space-y-4">
       <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm space-y-3">
-        <label class="block text-sm font-semibold text-slate-700">Paste Legal Document / Contract / Agreement:</label>
-        <textarea id="docInput" rows="7" class="w-full p-3 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-mono" placeholder="Paste tenancy agreement, NDA, Terms of Service, or employment clause here..."></textarea>
-        <button onclick="runAnalysis()" id="btnAnalyze" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2 rounded text-sm transition">Analyze Document</button>
+        <label for="docInput" class="block text-sm font-semibold text-slate-800">Paste Legal Agreement / Contract Text: <span class="text-xs font-normal text-slate-500">(Max 40,000 characters)</span></label>
+        <textarea id="docInput" rows="7" maxlength="40000" class="w-full p-3 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-600 outline-none text-sm font-mono" placeholder="Paste tenancy agreement, NDA, terms of service, or freelance contract here..."></textarea>
+        <button type="button" onclick="runAnalysis()" id="btnAnalyze" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded text-sm transition">Analyze Document</button>
       </div>
 
-      <div id="analyzeOutput" class="hidden space-y-4"></div>
+      <div id="analyzeOutput" aria-live="polite" class="hidden space-y-4"></div>
     </section>
 
-    <!-- Section 2: Compare -->
-    <section id="panel-compare" class="hidden space-y-4">
+    <!-- Panel 2: Compare -->
+    <section role="tabpanel" id="panel-compare" aria-labelledby="tab-compare" class="hidden space-y-4">
       <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1">Baseline / Document A:</label>
-            <textarea id="docA" rows="6" class="w-full p-3 border border-slate-300 rounded text-sm font-mono" placeholder="Standard clause or original contract..."></textarea>
+            <label for="docA" class="block text-sm font-semibold text-slate-800 mb-1">Baseline Document / Draft A:</label>
+            <textarea id="docA" rows="6" maxlength="20000" class="w-full p-3 border border-slate-300 rounded text-sm font-mono"></textarea>
           </div>
           <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1">Proposed / Document B:</label>
-            <textarea id="docB" rows="6" class="w-full p-3 border border-slate-300 rounded text-sm font-mono" placeholder="Counter-offer or modified clause..."></textarea>
+            <label for="docB" class="block text-sm font-semibold text-slate-800 mb-1">Proposed Revision / Draft B:</label>
+            <textarea id="docB" rows="6" maxlength="20000" class="w-full p-3 border border-slate-300 rounded text-sm font-mono"></textarea>
           </div>
         </div>
-        <button onclick="runComparison()" id="btnCompare" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2 rounded text-sm">Compare Contracts</button>
+        <button type="button" onclick="runComparison()" id="btnCompare" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded text-sm">Compare Contracts</button>
       </div>
-      <div id="compareOutput" class="hidden space-y-4"></div>
+      <div id="compareOutput" aria-live="polite" class="hidden space-y-4"></div>
     </section>
 
-    <!-- Section 3: Q&A -->
-    <section id="panel-ask" class="hidden space-y-4">
+    <!-- Panel 3: Ask -->
+    <section role="tabpanel" id="panel-ask" aria-labelledby="tab-ask" class="hidden space-y-4">
       <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm space-y-3">
-        <label class="block text-sm font-semibold text-slate-700">Source Document:</label>
-        <textarea id="qaDoc" rows="4" class="w-full p-3 border border-slate-300 rounded text-sm font-mono" placeholder="Paste document for context..."></textarea>
-        <label class="block text-sm font-semibold text-slate-700">Your Question:</label>
-        <input type="text" id="qaQuestion" class="w-full p-3 border border-slate-300 rounded text-sm" placeholder="e.g. Can I terminate early without paying a penalty?">
-        <button onclick="runQA()" id="btnQA" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2 rounded text-sm">Get Answer</button>
+        <label for="qaDoc" class="block text-sm font-semibold text-slate-800">Source Document:</label>
+        <textarea id="qaDoc" rows="4" maxlength="40000" class="w-full p-3 border border-slate-300 rounded text-sm font-mono"></textarea>
+        <label for="qaQuestion" class="block text-sm font-semibold text-slate-800">Your Specific Question:</label>
+        <input type="text" id="qaQuestion" maxlength="500" class="w-full p-3 border border-slate-300 rounded text-sm" placeholder="e.g., Can the landlord raise rent before the lease ends?">
+        <button type="button" onclick="runQA()" id="btnQA" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded text-sm">Get Grounded Answer</button>
       </div>
-      <div id="qaOutput" class="hidden bg-white p-5 rounded border border-slate-200 text-sm"></div>
+      <div id="qaOutput" aria-live="polite" class="hidden bg-white p-5 rounded-lg border border-slate-200 text-sm"></div>
     </section>
   </main>
 
+  <footer class="bg-slate-100 border-t border-slate-200 text-slate-600 text-xs py-4 px-6 text-center">
+    LexiClear &copy; 2026. Designed for privacy, safety, and digital accessibility.
+  </footer>
+
   <script>
-    function switchTab(tab) {
-      ['analyze', 'compare', 'ask'].forEach(t => {
-        document.getElementById(`panel-${t}`).classList.toggle('hidden', t !== tab);
-        const btn = document.getElementById(`tab-${t}`);
-        if (t === tab) {
-          btn.className = 'py-2 px-4 border-b-2 font-medium text-sm border-indigo-600 text-indigo-600';
-        } else {
-          btn.className = 'py-2 px-4 border-b-2 font-medium text-sm border-transparent text-slate-500 hover:text-slate-700';
-        }
+    // Escape HTML to prevent XSS
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+
+    function switchTab(active) {
+      ['analyze', 'compare', 'ask'].forEach(tab => {
+        const panel = document.getElementById(`panel-${tab}`);
+        const btn = document.getElementById(`tab-${tab}`);
+        const isMatch = tab === active;
+        panel.classList.toggle('hidden', !isMatch);
+        btn.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+        btn.setAttribute('tabindex', isMatch ? '0' : '-1');
+        btn.className = isMatch
+          ? 'tab-btn py-2.5 px-4 font-semibold text-sm border-b-2 border-indigo-600 text-indigo-700'
+          : 'tab-btn py-2.5 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-600 hover:text-slate-900';
       });
     }
 
     async function runAnalysis() {
-      const text = document.getElementById('docInput').value.trim();
-      if (!text) return alert('Please paste document text first.');
+      const input = document.getElementById('docInput');
+      const val = input.value.trim();
+      if (!val) { alert('Please paste document text first.'); return; }
+      
       const out = document.getElementById('analyzeOutput');
       out.classList.remove('hidden');
-      out.innerHTML = '<p class="text-sm text-slate-500 italic">Analyzing clauses and risk profiles...</p>';
+      out.innerHTML = '<div class="p-4 bg-slate-100 rounded text-sm text-slate-700 animate-pulse">Analyzing clauses, identifying obligations, and assessing risk...</div>';
 
-      const res = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ document_text: text })
-      });
-      const resp = await res.json();
-      if (resp.status !== 'success') {
-        out.innerHTML = `<div class="p-4 bg-red-50 text-red-700 rounded">${resp.detail || 'Analysis error'}</div>`;
-        return;
-      }
-      const d = resp.data;
-      out.innerHTML = `
-        <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm space-y-4">
-          <div>
-            <h3 class="text-lg font-bold text-slate-800">Executive Summary</h3>
-            <p class="text-sm text-slate-600 mt-1">${d.summary}</p>
-            <span class="inline-block mt-2 text-xs font-semibold bg-slate-100 text-slate-700 px-2 py-1 rounded">Complexity: ${d.reading_level}</span>
-          </div>
+      try {
+        const res = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ document_text: val })
+        });
+        const resp = await res.json();
+        if (!res.ok || resp.status !== 'success') throw new Error(resp.detail || 'Analysis request failed');
 
-          <div>
-            <h4 class="font-semibold text-slate-800 text-sm">Identified Risks & Red Flags</h4>
-            <div class="grid gap-2 mt-2">
-              ${d.risks_and_flags.map(r => `
-                <div class="p-3 rounded border text-xs ${r.risk_level === 'High' ? 'bg-red-50 border-red-200 text-red-900' : r.risk_level === 'Medium' ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-green-50 border-green-200 text-green-900'}">
-                  <div class="font-bold flex justify-between">
-                    <span>${r.clause_name}</span>
-                    <span class="uppercase tracking-wide">${r.risk_level} Risk</span>
+        const d = resp.data;
+        out.innerHTML = `
+          <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm space-y-5">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">Executive Summary</h2>
+              <p class="text-sm text-slate-700 mt-1 leading-relaxed">${escapeHtml(d.summary)}</p>
+              <span class="inline-block mt-2 text-xs font-semibold bg-indigo-50 text-indigo-800 border border-indigo-200 px-2.5 py-1 rounded">Reading Complexity: ${escapeHtml(d.reading_level)}</span>
+            </div>
+
+            <div>
+              <h3 class="font-bold text-slate-900 text-sm mb-2">Identified Risks & Red Flags</h3>
+              <div class="grid gap-2.5">
+                ${d.risks_and_flags.map(r => `
+                  <div class="p-3.5 rounded-md border text-xs ${
+                    r.risk_level === 'High' ? 'bg-red-50 border-red-200 text-red-950' :
+                    r.risk_level === 'Medium' ? 'bg-amber-50 border-amber-200 text-amber-950' :
+                    'bg-emerald-50 border-emerald-200 text-emerald-950'
+                  }">
+                    <div class="font-bold flex justify-between items-center mb-1">
+                      <span>${escapeHtml(r.clause_name)}</span>
+                      <span class="uppercase tracking-wider font-semibold px-2 py-0.5 rounded text-[10px] ${                         r.risk_level === 'High' ? 'bg-red-200' : r.risk_level === 'Medium' ? 'bg-amber-200' : 'bg-emerald-200'                       }">${escapeHtml(r.risk_level)} Risk</span>
+                    </div>
+                    <p class="leading-normal">${escapeHtml(r.explanation)}</p>
+                    <blockquote class="mt-2 pl-2 border-l-2 border-slate-400 italic text-slate-700">"${escapeHtml(r.quote)}"</blockquote>
                   </div>
-                  <p class="mt-1">${r.explanation}</p>
-                  <blockquote class="mt-1 pl-2 border-l-2 italic text-slate-600">"${r.quote}"</blockquote>
-                </div>
-              `).join('')}
+                `).join('')}
+              </div>
             </div>
-          </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="p-4 bg-slate-50 rounded border border-slate-200">
-              <h4 class="font-semibold text-slate-800 text-xs uppercase tracking-wide">Key Obligations</h4>
-              <ul class="list-disc list-inside mt-2 text-xs space-y-1 text-slate-700">
-                ${d.key_obligations.map(o => `<li>${o}</li>`).join('')}
-              </ul>
-            </div>
-            <div class="p-4 bg-slate-50 rounded border border-slate-200">
-              <h4 class="font-semibold text-slate-800 text-xs uppercase tracking-wide">Questions for Legal Counsel</h4>
-              <ul class="list-disc list-inside mt-2 text-xs space-y-1 text-slate-700">
-                ${d.questions_for_lawyer.map(q => `<li>${q}</li>`).join('')}
-              </ul>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="p-4 bg-slate-50 rounded-md border border-slate-200">
+                <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider mb-2">Key Obligations</h3>
+                <ul class="list-disc list-inside space-y-1.5 text-xs text-slate-700">
+                  ${d.key_obligations.map(o => `<li>${escapeHtml(o)}</li>`).join('')}
+                </ul>
+              </div>
+              <div class="p-4 bg-slate-50 rounded-md border border-slate-200">
+                <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider mb-2">Questions for Legal Counsel</h3>
+                <ul class="list-disc list-inside space-y-1.5 text-xs text-slate-700">
+                  ${d.questions_for_lawyer.map(q => `<li>${escapeHtml(q)}</li>`).join('')}
+                </ul>
+              </div>
             </div>
           </div>
-        </div>
-      `;
+        `;
+      } catch (err) {
+        out.innerHTML = `<div class="p-4 bg-red-50 border border-red-200 text-red-800 rounded text-sm">${escapeHtml(err.message)}</div>`;
+      }
     }
 
     async function runComparison() {
       const a = document.getElementById('docA').value.trim();
       const b = document.getElementById('docB').value.trim();
-      if (!a || !b) return alert('Please enter both documents/clauses.');
+      if (!a || !b) { alert('Please provide both documents to compare.'); return; }
+
       const out = document.getElementById('compareOutput');
       out.classList.remove('hidden');
-      out.innerHTML = '<p class="text-sm text-slate-500 italic">Comparing documents...</p>';
+      out.innerHTML = '<div class="p-4 bg-slate-100 rounded text-sm text-slate-700 animate-pulse">Running comparative analysis...</div>';
 
-      const res = await fetch('/api/compare', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ doc_a: a, doc_b: b })
-      });
-      const resp = await res.json();
-      const d = resp.data;
-      out.innerHTML = `
-        <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm space-y-4 text-sm">
-          <div class="p-3 bg-indigo-50 border border-indigo-200 rounded text-indigo-900 font-medium">
-            Overall Assessment: ${d.favorable_to}
-          </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs border border-slate-200">
-              <thead class="bg-slate-100 border-b">
-                <tr><th class="p-2">Clause / Aspect</th><th class="p-2">Document A</th><th class="p-2">Document B</th><th class="p-2">Analysis</th></tr>
-              </thead>
-              <tbody>
-                ${d.key_differences.map(item => `
-                  <tr class="border-b">
-                    <td class="p-2 font-semibold">${item.aspect}</td>
-                    <td class="p-2">${item.doc_a_position}</td>
-                    <td class="p-2">${item.doc_b_position}</td>
-                    <td class="p-2 text-slate-600">${item.impact}</td>
+      try {
+        const res = await fetch('/api/compare', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ doc_a: a, doc_b: b })
+        });
+        const resp = await res.json();
+        if (!res.ok || resp.status !== 'success') throw new Error(resp.detail || 'Comparison failed');
+
+        const d = resp.data;
+        out.innerHTML = `
+          <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm space-y-4">
+            <div class="p-3.5 bg-indigo-50 border border-indigo-200 rounded text-indigo-900 text-sm font-semibold">
+              Assessment: ${escapeHtml(d.favorable_to)}
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border border-slate-200" summary="Clause differences between Document A and Document B">
+                <thead class="bg-slate-100 border-b">
+                  <tr>
+                    <th scope="col" class="p-2.5 font-bold text-slate-800">Aspect</th>
+                    <th scope="col" class="p-2.5 font-bold text-slate-800">Doc A</th>
+                    <th scope="col" class="p-2.5 font-bold text-slate-800">Doc B</th>
+                    <th scope="col" class="p-2.5 font-bold text-slate-800">Impact Analysis</th>
                   </tr>
-                `).join('')}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  ${d.key_differences.map(item => `
+                    <tr class="border-b hover:bg-slate-50">
+                      <td class="p-2.5 font-semibold text-slate-900">${escapeHtml(item.aspect)}</td>
+                      <td class="p-2.5 text-slate-700">${escapeHtml(item.doc_a_position)}</td>
+                      <td class="p-2.5 text-slate-700">${escapeHtml(item.doc_b_position)}</td>
+                      <td class="p-2.5 text-slate-700">${escapeHtml(item.impact)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      `;
+        `;
+      } catch (err) {
+        out.innerHTML = `<div class="p-4 bg-red-50 border border-red-200 text-red-800 rounded text-sm">${escapeHtml(err.message)}</div>`;
+      }
     }
 
     async function runQA() {
       const doc = document.getElementById('qaDoc').value.trim();
       const q = document.getElementById('qaQuestion').value.trim();
-      if (!doc || !q) return alert('Enter both document context and your question.');
+      if (!doc || !q) { alert('Enter both document context and your question.'); return; }
+
       const out = document.getElementById('qaOutput');
       out.classList.remove('hidden');
-      out.innerHTML = '<p class="text-slate-500 italic">Finding answer...</p>';
+      out.innerHTML = '<div class="p-4 bg-slate-100 rounded text-sm text-slate-700 animate-pulse">Finding grounded answer...</div>';
 
-      const res = await fetch('/api/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ document_text: doc, question: q })
-      });
-      const resp = await res.json();
-      out.innerHTML = `<div class="whitespace-pre-line text-slate-800">${resp.answer}</div>`;
+      try {
+        const res = await fetch('/api/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ document_text: doc, question: q })
+        });
+        const resp = await res.json();
+        if (!res.ok || resp.status !== 'success') throw new Error(resp.detail || 'Q&A failed');
+
+        out.innerHTML = `
+          <h2 class="font-bold text-slate-900 mb-2">Answer</h2>
+          <div class="whitespace-pre-line text-slate-700 leading-relaxed">${escapeHtml(resp.answer)}</div>
+        `;
+      } catch (err) {
+        out.innerHTML = `<div class="p-4 bg-red-50 border border-red-200 text-red-800 rounded text-sm">${escapeHtml(err.message)}</div>`;
+      }
     }
   </script>
 </body>
