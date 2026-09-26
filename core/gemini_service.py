@@ -27,7 +27,8 @@ def analyze_document(text: str) -> dict:
         config=types.GenerateContentConfig(
             system_instruction=SYSTEM_GUARDRAIL,
             response_mime_type="application/json",
-            temperature=0.2
+            temperature=0.2,
+            max_output_tokens=1500
         )
     )
     return json.loads(response.text)
@@ -42,7 +43,8 @@ def compare_documents(doc_a: str, doc_b: str) -> dict:
         config=types.GenerateContentConfig(
             system_instruction=SYSTEM_GUARDRAIL,
             response_mime_type="application/json",
-            temperature=0.2
+            temperature=0.2,
+            max_output_tokens=1500
         )
     )
     return json.loads(response.text)
@@ -56,7 +58,8 @@ def ask_question(doc_text: str, question: str) -> str:
         contents=prompt,
         config=types.GenerateContentConfig(
             system_instruction=SYSTEM_GUARDRAIL,
-            temperature=0.2
+            temperature=0.2,
+            max_output_tokens=1500
         )
     )
     return response.text

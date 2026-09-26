@@ -1,15 +1,21 @@
 import hashlib
 from collections import OrderedDict
+import os
 from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
+from starlette.concurrency import run_in_threadpool
+
 from core.config import DISCLAIMER_TEXT
 from core.gemini_service import analyze_document, compare_documents, ask_question
-import os
 
-app = FastAPI(title="LexiClear API", version="1.1.0", docs_url=None, redoc_url=None)
+app = FastAPI(title="LexiClear API", version="1.2.0", docs_url=None, redoc_url=None)
 
-# ----------------- Efficiency: Simple LRU Cache -----------------
+# Efficiency: GZip compression for payloads over 500 bytes
+app.add_middleware(GZipMiddleware, minimum_size=500)
+
+# Efficiency: Thread-safe bounded LRU Cache
 class SimpleCache:
     def __init__(self, capacity: int = 100):
         self.cache = OrderedDict()
@@ -28,12 +34,12 @@ class SimpleCache:
         if len(self.cache) > self.capacity:
             self.cache.popitem(last=False)
 
-lru_cache = SimpleCache(capacity=50)
+lru_cache = SimpleCache(capacity=100)
 
 def hash_payload(*args) -> str:
     return hashlib.sha256(":::".join(args).encode("utf-8")).hexdigest()
 
-# ----------------- Security: Headers Middleware -----------------
+# Security Headers Middleware
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
     response: Response = await call_next(request)
@@ -47,7 +53,7 @@ async def add_security_headers(request: Request, call_next):
     )
     return response
 
-# ----------------- Request Models with Strict Bounds -----------------
+# Request Models with Strict Bounds
 class AnalyzeRequest(BaseModel):
     document_text: str = Field(..., min_length=20, max_length=50000)
 
@@ -64,42 +70,43 @@ def health_check():
     return {"status": "ok", "service": "LexiClear", "disclaimer": DISCLAIMER_TEXT}
 
 @app.post("/api/analyze")
-def handle_analyze(req: AnalyzeRequest):
+async def handle_analyze(req: AnalyzeRequest):
     cache_key = hash_payload("analyze", req.document_text)
     cached = lru_cache.get(cache_key)
     if cached:
         return {"status": "success", "disclaimer": DISCLAIMER_TEXT, "data": cached, "cached": True}
 
     try:
-        data = analyze_document(req.document_text)
+        # Offload sync Gemini call to threadpool to preserve async event loop
+        data = await run_in_threadpool(analyze_document, req.document_text)
         lru_cache.set(cache_key, data)
         return {"status": "success", "disclaimer": DISCLAIMER_TEXT, "data": data, "cached": False}
     except Exception:
         raise HTTPException(status_code=500, detail="Document analysis processing failed. Please check format.")
 
 @app.post("/api/compare")
-def handle_compare(req: CompareRequest):
+async def handle_compare(req: CompareRequest):
     cache_key = hash_payload("compare", req.doc_a, req.doc_b)
     cached = lru_cache.get(cache_key)
     if cached:
         return {"status": "success", "disclaimer": DISCLAIMER_TEXT, "data": cached, "cached": True}
 
     try:
-        data = compare_documents(req.doc_a, req.doc_b)
+        data = await run_in_threadpool(compare_documents, req.doc_a, req.doc_b)
         lru_cache.set(cache_key, data)
         return {"status": "success", "disclaimer": DISCLAIMER_TEXT, "data": data, "cached": False}
     except Exception:
         raise HTTPException(status_code=500, detail="Contract comparison processing failed.")
 
 @app.post("/api/ask")
-def handle_ask(req: QuestionRequest):
+async def handle_ask(req: QuestionRequest):
     cache_key = hash_payload("ask", req.document_text, req.question)
     cached = lru_cache.get(cache_key)
     if cached:
         return {"status": "success", "disclaimer": DISCLAIMER_TEXT, "answer": cached, "cached": True}
 
     try:
-        answer = ask_question(req.document_text, req.question)
+        answer = await run_in_threadpool(ask_question, req.document_text, req.question)
         lru_cache.set(cache_key, answer)
         return {"status": "success", "disclaimer": DISCLAIMER_TEXT, "answer": answer, "cached": False}
     except Exception:
